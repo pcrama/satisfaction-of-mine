@@ -1,10 +1,23 @@
 "Time entries are represented by the L{TimeEntry} class"
 
+import datetime
+
 import attr
+
+def _convert_date(x):
+    try:
+        return datetime.datetime.strptime(x, "%Y-%m-%d").date()
+    except Exception:
+        return x
 
 @attr.s
 class TimeEntry(object):
-    issue_id = attr.ib(validator=attr.validators.instance_of(str))
+    def _validate_string_and_not_blank(self, attribute, value):
+        attr.validators.instance_of(str)(self, attribute, value)
+        if len(value.strip()) == 0:
+            raise ValueError("'{name}' must be non-blank and {value!r} isn't".
+                             format(name=attribute.name, value=value))
+    issue_id = attr.ib(validator=_validate_string_and_not_blank)
     duration = attr.ib()
     @duration.validator
     def _validate_duration(self, attribute, value):
@@ -12,10 +25,7 @@ class TimeEntry(object):
         if value < 0:
             raise ValueError("'{name}' must be >= 0 and {value!r} isn't".format(
                 name=attribute.name, value=value))
-    category = attr.ib()
-    @category.validator
-    def _validate_category(self, attribute, value):
-        attr.validators.instance_of(str)(self, attribute, value)
-        if len(value.strip()) == 0:
-            raise ValueError("'{name}' must be non-blank and {value!r} isn't".
-                             format(name=attribute.name, value=value))
+    category = attr.ib(validator=_validate_string_and_not_blank)
+    comment = attr.ib(validator=attr.validators.instance_of(str))
+    date = attr.ib(convert=_convert_date,
+                   validator=attr.validators.instance_of(datetime.date))
