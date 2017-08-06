@@ -34,7 +34,7 @@ def get_redmine_info(
     return Effect(HttpRequest(
         base_url,
         {"c[]": ["project", "spent_on", "user", "activity", "issue",
-                 "comments", "hours", "spent_on",],
+                 "comments", "hours",],
          "f[]": ["user","spent_on", ""],
          "op[spent_on]": "><",
          "op[user]": "=",
