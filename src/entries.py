@@ -2,6 +2,8 @@
 
 import csv
 import datetime
+import re
+from typing import Iterator
 
 import attr
 
@@ -32,18 +34,25 @@ class TimeEntry(object):
                    validator=attr.validators.instance_of(datetime.date))
 
 
-def parse_from(s):
+_EXTRACT_ISSUE_ID = re.compile("[^#]* #([0-9]+): .*")
+"@var: Extract issue number from Redmine `issue' column"
+
+def parse_from(s: str) -> Iterator[TimeEntry]:
     lines = csv.reader(x for x in s.split("\n"))
     header = next(lines)
+    # Looking for the column indexes with header.index will raise ValueError
+    # if the column isn't found
     issue_idx = header.index("Issue")
     duration_idx = header.index("Hours")
     category_idx = header.index("Activity")
     comment_idx = header.index("Comment")
     date_idx = header.index("Date")
     for row in lines:
-        yield TimeEntry(row[issue_idx],
+        issue = _EXTRACT_ISSUE_ID.match(row[issue_idx]).group(1)
+        d = datetime.datetime.strptime(row[date_idx], "%Y-%m-%d")
+        yield TimeEntry(issue,
                         float(row[duration_idx]),
                         row[category_idx],
                         row[comment_idx],
-                        "2017-08-01",
-                        ) #row[date_idx])
+                        datetime.date(d.year, d.month, d.day),
+        )

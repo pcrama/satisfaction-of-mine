@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import datetime
 import unittest
 
 import entries
@@ -70,6 +71,44 @@ class TestTimeEntry(unittest.TestCase):
 
     def test_100_create_valid_TimeEntry(self):
         entries.TimeEntry("12345", 8.0, "Automation", "comment", "2017-07-24")
+
+
+class TestParseFrom(unittest.TestCase):
+    def assert_missing_column(self, s, col):
+        with self.assertRaisesRegex(ValueError, ".{}. is not in list".format(col)):
+            next(entries.parse_from(s))
+
+    def test_001_missing_issue_id(self):
+        self.assert_missing_column('Project,User,Date,Activity,Comment,Hours', "Issue")
+
+    def test_002_missing_duration(self):
+        self.assert_missing_column('Project,User,Date,Activity,Comment,Issue', "Hours")
+
+    def test_003_missing_category(self):
+        self.assert_missing_column('Project,User,Date,Hours,Comment,Issue', "Activity")
+
+    def test_004_missing_date(self):
+        self.assert_missing_column('Project,User,Activity,Hours,Comment,Issue', "Date")
+
+    def test_005_missing_comment(self):
+        self.assert_missing_column('Project,User,Activity,Hours,Date,Issue', "Comment")
+
+    def test_006_empty_csv(self):
+        with self.assertRaises(StopIteration):
+            next(entries.parse_from(
+                'Project,User,Activity,Hours,Date,Issue,Comment'))
+
+    def test_007_one_row(self):
+        self.assertEqual(
+            next(entries.parse_from(
+                'Project,User,Activity,Hours,Date,Issue,Comment\n'
+                'project,user,Design,2.00,2017-07-31,Task #71869: Do this,Done that\n')),
+            entries.TimeEntry(
+                "71869",
+                2.0,
+                "Design",
+                "Done that",
+                datetime.date(2017, 7, 31)))
 
 
 if __name__ == "__main__":
