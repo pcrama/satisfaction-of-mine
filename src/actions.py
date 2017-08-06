@@ -35,12 +35,13 @@ def get_redmine_info(
         base_url,
         {"c[]": ["project", "spent_on", "user", "activity", "issue",
                  "comments", "hours",],
-         "f[]": ["user","spent_on", ""],
+         "f[]": ["user_id","spent_on", ""],
          "op[spent_on]": "><",
-         "op[user]": "=",
-         "v[spent_on]": ["{:%Y-%m-%d}".format(x) for x in (
+         "op[user_id]": "=",
+         "v[spent_on][]": ["{:%Y-%m-%d}".format(x) for x in (
              start_date, end_date)],
-         "v[user][]": user,
+         "v[user_id][]": user,
+         "key": api_key,
         }))
 
 
