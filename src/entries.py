@@ -49,10 +49,9 @@ def parse_from(s: str) -> Iterator[TimeEntry]:
     date_idx = header.index("Date")
     for row in lines:
         issue = _EXTRACT_ISSUE_ID.match(row[issue_idx]).group(1)
-        d = datetime.datetime.strptime(row[date_idx], "%Y-%m-%d")
         yield TimeEntry(issue,
                         float(row[duration_idx]),
                         row[category_idx],
                         row[comment_idx],
-                        datetime.date(d.year, d.month, d.day),
+                        row[date_idx],
         )
