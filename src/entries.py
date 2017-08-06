@@ -1,5 +1,6 @@
 "Time entries are represented by the L{TimeEntry} class"
 
+import csv
 import datetime
 
 import attr
@@ -29,3 +30,20 @@ class TimeEntry(object):
     comment = attr.ib(validator=attr.validators.instance_of(str))
     date = attr.ib(convert=_convert_date,
                    validator=attr.validators.instance_of(datetime.date))
+
+
+def parse_from(s):
+    lines = csv.reader(x for x in s.split("\n"))
+    header = next(lines)
+    issue_idx = header.index("Issue")
+    duration_idx = header.index("Hours")
+    category_idx = header.index("Activity")
+    comment_idx = header.index("Comment")
+    date_idx = header.index("Date")
+    for row in lines:
+        yield TimeEntry(row[issue_idx],
+                        float(row[duration_idx]),
+                        row[category_idx],
+                        row[comment_idx],
+                        "2017-08-01",
+                        ) #row[date_idx])
