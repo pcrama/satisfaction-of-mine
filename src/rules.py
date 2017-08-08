@@ -1,9 +1,10 @@
 """Interpret rules to compute satisfaction score of a given time entry"""
 
 from abc import ABCMeta, abstractmethod
+import json
 
 import attr
-from typing import Any, Optional, Sequence, TypeVar
+from typing import Any, Callable, List, Optional, Sequence, TypeVar
 
 import entries
 
@@ -102,3 +103,27 @@ class RuleEvaluator(object):
             r = self.selector.select(rules, entry)
             acc.update(self.accumulator.from_rule_and_entry(r, entry))
         return acc
+
+
+def _extract_keys_and_construct(
+        d: dict, ks: Sequence[str], ctor: Callable[..., Rule]) -> Optional[Rule]:
+    key_count = len(ks)
+    if key_count == len(d):
+        try:
+            values = [d[key] for key in ks]
+        except KeyError:
+            return None
+        else:
+            return ctor(*values)
+    else:
+        return None
+
+def parse_rules(d: dict) -> List[Rule]:
+    return [next(x
+                 for x in (_extract_keys_and_construct(elt, keys, ctor)
+                           for (keys, ctor) in ((["issue_id", "weight"], MatchIssueID),
+                                                (["category", "weight"], MatchCategory),
+                                                (["weight"], MatchAny),
+                           ))
+                 if x is not None)
+            for elt in d["rules"]]

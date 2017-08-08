@@ -139,6 +139,58 @@ class TestRuleEvaluator(unittest.TestCase):
                          evaluator.satisfaction(rulz, entrz).x)
 
 
+class TestParseRules(unittest.TestCase):
+    def assert_parse_rules(self, rules_list, expected):
+        self.assertEqual(rules.parse_rules({"rules": rules_list}), expected)
+
+    def test_001_empty_rules_list(self):
+        self.assert_parse_rules([], [])
+
+    def test_002_no_rules_raises(self):
+        self.assertRaises(KeyError, rules.parse_rules, {})
+
+    def test_003_1_rule_match_id(self):
+        issue_id = "12345"
+        weight = 0.5
+        self.assert_parse_rules([{"issue_id": issue_id, "weight": weight}],
+                                [rules.MatchIssueID(issue_id, weight)])
+
+    def test_004_2_rules_match_id(self):
+        issue_id = "12345", "67890"
+        weight = 0.5, 1.0
+        self.assert_parse_rules([{"issue_id": issue_id[idx], "weight": weight[idx]}
+                                 for idx in range(len(issue_id))],
+                                [rules.MatchIssueID(issue_id[idx], weight[idx])
+                                 for idx in range(len(issue_id))])
+
+    def test_005_1_rule_match_any(self):
+        weight = 0.5
+        self.assert_parse_rules([{"weight": weight}], [rules.MatchAny(weight)])
+
+    def test_006_1_rule_match_category(self):
+        category = "Automation"
+        weight = 0.75
+        self.assert_parse_rules([{"category": category, "weight": weight}],
+                                [rules.MatchCategory(category, weight)])
+
+    def test_007_mix_of_rules(self):
+        issue_id = "111222"
+        weight_id = 0.3
+        category = "Other"
+        weight_category = 0.6
+        weight_any = 0.9
+        self.assert_parse_rules([{"issue_id": issue_id, "weight": weight_id},
+                                 {"category": category, "weight": weight_category},
+                                 {"weight": weight_any}],
+                                [rules.MatchIssueID(issue_id, weight_id),
+                                 rules.MatchCategory(category, weight_category),
+                                 rules.MatchAny(weight_any)])
+
+    def test_008_extra_keys_raise(self):
+        self.assertRaises(Exception,
+                          rules.parse_rules,
+                          {"rules": [{"issue_id": "1", "weight": 0.0, "extra": "raises"}]})
+
 if __name__ == "__main__":
     import sys
     unittest.main(verbosity=2, exit=not hasattr(sys, "ps1"))
