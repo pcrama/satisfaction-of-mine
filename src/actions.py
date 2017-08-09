@@ -1,6 +1,8 @@
 "Side-effecting actions"
 
 import datetime
+import json
+import os
 
 import attr
 from effect import (
@@ -48,6 +50,21 @@ def get_redmine_info(
 @sync_performer
 def perform_http_request(dispatcher, req):
     return requests.get(req.url, params=req.params)
+
+
+@attr.s
+class ReadJSON:
+    filename = attr.ib()
+
+
+def get_config_json(fname):
+    return Effect(ReadJSON(os.path.abspath(fname)))
+
+@sync_performer
+def perform_read_json(dispatcher, read_json):
+    with open(read_json.filename) as fp:
+        return json.load(fp)
+
 
 @attr.s
 class ReadLine:
