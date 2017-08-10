@@ -1,10 +1,11 @@
 import argparse
 import datetime
 import hashlib
-from typing import List
+from typing import Dict, List, Optional
+
+from effect.do import do
 
 import rules
-from effect import do
 
 
 class HoursAccumulator(rules.Accumulator):
@@ -16,7 +17,7 @@ class HoursAccumulator(rules.Accumulator):
     def neutral(cls):
         return cls(0, 0)
 
-    def update(self, other):
+    def update(self, other: "HoursAccumulator") -> None:
         self.good += other.good
         self.total += other.total
 
@@ -24,6 +25,50 @@ class HoursAccumulator(rules.Accumulator):
     def from_rule_and_entry(cls, rule, entry):
         return cls(rule.weight * entry.duration, entry.duration)
     
+
+class StampedHoursAccumulator(rules.Accumulator):
+    def __init__(self, when: datetime.date, good: float, total: float) -> None:
+        if good == 0.0 and total == 0.0:
+            self.cal : Dict[datetime.date, HoursAccumulator] = dict()
+        else:
+            self.cal = {when: HoursAccumulator(good, total)}
+
+    @classmethod
+    def neutral(cls):
+        return cls(datetime.date.today(), 0, 0)
+
+    def update(self, other: "StampedHoursAccumulator") -> None:
+        for when, hours_acc in other.cal.items():
+            # This creates potentially unused HoursAccumulator instances that
+            # will be garbage collected but this is a script to work on small
+            # data sets, so I don't care.
+            self.cal.setdefault(when, HoursAccumulator.neutral()).update(
+                hours_acc)
+
+    @classmethod
+    def from_rule_and_entry(cls, rule, entry):
+        return cls(entry.date, rule.weight * entry.duration, entry.duration)
+
+    def period_start(self) -> Optional[datetime.date]:
+        first = None
+        for x in self.cal:
+            if first is None or x < first:
+                first = x
+        return first
+
+    def period_end(self) -> Optional[datetime.date]:
+        last = None
+        for x in self.cal:
+            if last is None or x > last:
+                last = x
+        return last
+
+    def period_hours_accumulator(self) -> HoursAccumulator:
+        result = HoursAccumulator.neutral()
+        for val in self.cal.values():
+            result.update(val)
+        return result
+
 
 class RuntimeInfo(object):
     "Container for runtime information.  See L{get_runtime_info}"
