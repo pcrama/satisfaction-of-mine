@@ -135,6 +135,17 @@ class TestRuleEvaluator(unittest.TestCase):
                           (rulz[3], entrz[5])],
                          evaluator.satisfaction(rulz, entrz).x)
 
+    def test_005_zero_weight(self):
+        "A matching rule with a weight 0.0 should count as match"
+        # This was a real issue found during exploratory testing: 0.0 is
+        # interpreted as False in boolean context.
+        rulz = [rules.MatchAny(0.0)]
+        entrz = [entries.TimeEntry("12345", 1.0, "Other", "", "2017-07-29")]
+        evaluator = rules.RuleEvaluator(rules.SelectRuleUsingTheirMatchMethod(),
+                                        _DummyAccumulator)
+        self.assertEqual([(rulz[0], entrz[0])],
+                         evaluator.satisfaction(rulz, entrz).x)
+
 
 class TestParseRules(unittest.TestCase):
     def assert_parse_rules(self, rules_list, expected):

@@ -26,7 +26,7 @@ class Rule(metaclass=ABCMeta):
 class MatchAny(Rule):
     weight = attr.ib(validator=Rule._validate_weight)
 
-    def match(self, e):
+    def match(self, e: entries.TimeEntry) -> Optional[float]:
         return self.weight
 
 
@@ -35,9 +35,11 @@ class MatchIssueID(Rule):
     issue_id = attr.ib(validator=attr.validators.instance_of(str))
     weight = attr.ib(validator=Rule._validate_weight)
 
-    def match(self, e):
+    def match(self, e: entries.TimeEntry) -> Optional[float]:
         if e.issue_id == self.issue_id:
             return self.weight
+        else:
+            return None
 
 
 @attr.s
@@ -45,8 +47,11 @@ class MatchCategory(Rule):
     category = attr.ib(validator=attr.validators.instance_of(str))
     weight = attr.ib(validator=Rule._validate_weight)
 
-    def match(self, e):
-        return e.category == self.category
+    def match(self, e: entries.TimeEntry) -> Optional[float]:
+        if e.category == self.category:
+            return self.weight
+        else:
+            return None
 
 
 class Selector(metaclass=ABCMeta):
@@ -95,7 +100,7 @@ class Convertor(metaclass=ABCMeta):
 
 class SelectRuleUsingTheirMatchMethod(Selector):
     def select(self, rules, entry):
-        return next(r for r in rules if r.match(entry))
+        return next(r for r in rules if r.match(entry) is not None)
 
 
 class RuleEvaluator(object):
