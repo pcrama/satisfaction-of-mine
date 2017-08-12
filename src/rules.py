@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 import json
 
 import attr
-from typing import Any, Callable, List, Optional, Sequence, TypeVar
+from typing import Any, Callable, List, Optional, Sequence, Type, TypeVar
 
 import entries
 
@@ -64,10 +64,11 @@ class Accumulator(metaclass=ABCMeta):
     """Represent data with a neutral element and associative operation
 
     Example: (0, +) or (1, *)"""
+    _C = TypeVar("_C", bound="Accumulator")
     # The abstractmethod stuff is to help mypy
     @classmethod
     @abstractmethod
-    def neutral(cls) -> "Accumulator":
+    def neutral(cls: Type[_C]) -> _C:
         "Return fresh Accumulator instance that can be combined with others"
         pass
 
@@ -92,12 +93,26 @@ class Convertor(metaclass=ABCMeta):
         pass
 
 
-@attr.s
 class RuleEvaluator(object):
-    selector = attr.ib(validator=attr.validators.instance_of(Selector))
-    accumulator = attr.ib(validator=attr.validators.instance_of(Accumulator))
+    AccumulatorType = TypeVar("AccumulatorType", bound=Accumulator)
+    def __init__(self, selector: Selector, accumulator: Type[AccumulatorType]) -> None:
+        if hasattr(selector, "select"):
+            self.selector = selector
+        else:
+            raise TypeError("selector argument should have a `select' method")
+        acc_methods = ("neutral", "update", "from_rule_and_entry")
+        if all(hasattr(accumulator, a) for a in acc_methods):
+            self.accumulator = accumulator
+        else:
+            raise TypeError(
+                "accumulator argument should have {} methods".format(
+                    acc_methods))
 
-    def satisfaction(self, rules: Sequence[Rule], entries: Sequence[entries.TimeEntry]) -> Accumulator:
+    def satisfaction(
+            self,
+            rules: Sequence[Rule],
+            entries: Sequence[entries.TimeEntry]
+    ) -> AccumulatorType:
         acc = self.accumulator.neutral()
         for entry in entries:
             r = self.selector.select(rules, entry)
