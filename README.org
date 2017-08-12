@@ -1,0 +1,59 @@
+* How to use
+Run like this
+#+BEGIN_SRC shell :exports code
+  PYTHONIOENCODING=utf-8 python src/main.py config.json password
+#+END_SRC
+
+The password passed on the command line will be hashed and the hash
+will be XORed with the =api_key= in the configuration file.  The
+configuration file =config.json= contains the aformentioned =api_key=,
+the host name of the redmine server to query and =rules= to evaluate
+the time entries:
+
+#+BEGIN_EXAMPLE
+  {"api_key": "0123456789012345678901234567890123456789",
+   "host": "http://redmine.example.com",
+   "rules": [{"category": "Automation", "weight": 1},
+             {"issue_id": "1234", "weight": 1},
+             {"weight": 0.0}]}
+#+END_EXAMPLE
+
+- =api_key= :: API key for the Redmine server.  The key is obfuscated.
+- =host= :: Redmine host to query.
+- =rules= :: List of rules: the order matters as the first rule
+             matching an entry is used to weight it.
+
+** Rules
+There are three types of rules, defined by the parameters.  All rules
+have a =weight=, a float between 0 and 1.  This =weight= is used to
+count how many `satisfying' hours have been spent in total.
+
+It is an error if a time entry matches no rule at all, so the list
+should end with a catch-all rule.
+
+*** Rule applying to a given =issue_id=
+All hours spent on that task are multiplied by =weight=.
+
+*** Rule applying to a given =category=
+All hours spent doing that activity, whatever the task is, are
+multiplied by =weight=.
+
+*** Catch all rule
+Any time entry will match this.
+
+* Example output
+Each vertical bar represents the satisfaction of one day (the number
+of satisfying hours divided by the total number of hours entered for
+that day).  Grayed out days are days for which no entry was returned
+by Redmine.  The global satisfaction is the sum of all satisfying
+hours divided by the total number of hours logged.
+
+#+BEGIN_EXAMPLE
+            ▕  ██ ░░░    ░░     ░█░ ▄▆▁░░▂▆ █▏
+  2016-07-11▕  ██▅░░░▂▄▄▅░░    ▆░█░ ███░░██▄█▏2017-08-11
+  Global satisfaction over this period: 28.9%
+#+END_EXAMPLE
+
+* Source code
+This project was also an excuse to try the [[https://pypi.python.org/pypi/effect][effect]] library and the [[http://mypy-lang.org/][mypy]]
+type checker.
