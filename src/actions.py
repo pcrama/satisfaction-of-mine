@@ -49,7 +49,7 @@ def get_redmine_info(
 
 @sync_performer
 def perform_http_request(dispatcher, req):
-    return requests.get(req.url, params=req.params)
+    return requests.get(req.url, params=req.params).text
 
 
 @attr.s
@@ -63,7 +63,7 @@ def get_config_json(fname):
 @sync_performer
 def perform_read_json(dispatcher, read_json):
     with open(read_json.filename) as fp:
-        return json.load(fp)
+        return json.load(fp, parse_int=float)
 
 
 class GetCurrentDate:
@@ -91,6 +91,7 @@ IO_DISPATCHER = ComposedDispatcher([
     TypeDispatcher({ReadJSON: perform_read_json,
                     GetCurrentDate: perform_get_current_date,
                     HttpRequest: perform_http_request,
+                    Print: perform_print,
     }),
     base_dispatcher])
 
