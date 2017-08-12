@@ -39,7 +39,7 @@ _EXTRACT_ISSUE_ID = re.compile("[^#]* #([0-9]+): .*")
 
 def parse_from(s: str) -> Iterator[TimeEntry]:
     lines = csv.reader(x for x in s.split("\n"))
-    header = next(lines)
+    header = next(lin for lin in lines if lin)  # skip leading empty lines
     # Looking for the column indexes with header.index will raise ValueError
     # if the column isn't found
     issue_idx = header.index("Issue")
@@ -48,6 +48,8 @@ def parse_from(s: str) -> Iterator[TimeEntry]:
     comment_idx = header.index("Comment")
     date_idx = header.index("Date")
     for row in lines:
+        if len(row) < len(header):
+            continue  # ignore incomplete lines
         issue = _EXTRACT_ISSUE_ID.match(row[issue_idx]).group(1)
         yield TimeEntry(issue,
                         float(row[duration_idx]),
