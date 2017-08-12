@@ -85,6 +85,11 @@ class TestHoursAccumulator(unittest.TestCase, BaseAccumulatorTestMixin):
     def assert_accumulator_equal(self, a, b):
         _assert_accumulator_equal(self, a, b)
 
+    def test_010_satisfaction(self):
+        self.assertAlmostEqual(self.make_data_1().satisfaction(), 0.5)
+        self.assertAlmostEqual(self.make_data_2().satisfaction(), 0.75)
+        self.assertAlmostEqual(self.make_data_3().satisfaction(), 0.833333333)
+
 
 class TestStampedHoursAccumulator(unittest.TestCase, BaseAccumulatorTestMixin):
     Acc = main.StampedHoursAccumulator
@@ -146,6 +151,24 @@ class TestStampedHoursAccumulator(unittest.TestCase, BaseAccumulatorTestMixin):
             self,
             main.HoursAccumulator(5.0 + 7.0, 6.0 + 8.0),
             z.period_hours_accumulator())
+
+    def test_013_period_data(self):
+        input_hours = ((1.0, 1.0),    (1.0, 2.0),   (2.0, 8.0),   (2.0, 2.0))
+        # Notice the gaps in the date ranges
+        input_dates = ((2016, 2, 27), (2016, 3, 2), (2016, 3, 4), (2016, 3, 4))
+        acc = self.Acc.neutral()
+        for hs, ds in zip(input_hours, input_dates):
+            acc.update(self.Acc(datetime.date(*ds), *hs))
+        data = acc.period_data()
+        self.assertEqual(len(data), 7)
+        self.assertAlmostEqual(data[0], 1.0)             # 27 Feb
+        self.assertTrue(data[1] < 0.0 or data[1] > 1.0)  # 28 Feb
+        self.assertTrue(data[2] < 0.0 or data[2] > 1.0)  # 29 Feb
+        self.assertTrue(data[3] < 0.0 or data[3] > 1.0)  #  1 Mar
+        self.assertAlmostEqual(data[4], 0.5)             #  2 Mar
+        self.assertTrue(data[5] < 0.0 or data[5] > 1.0)  #  3 Mar
+        self.assertAlmostEqual(data[6], 0.4)             #  4 Mar
+
 
 class TestArgParse(unittest.TestCase):
     def setUp(self):

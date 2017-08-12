@@ -25,6 +25,9 @@ class HoursAccumulator(rules.Accumulator):
     @classmethod
     def from_rule_and_entry(cls, rule, entry):
         return cls(rule.weight * entry.duration, entry.duration)
+
+    def satisfaction(self) -> float:
+        return self.good / self.total
     
 
 class StampedHoursAccumulator(rules.Accumulator):
@@ -36,7 +39,8 @@ class StampedHoursAccumulator(rules.Accumulator):
 
     @classmethod
     def neutral(cls):
-        return cls(datetime.date.today(), 0, 0)
+        # Date is ignored anyway
+        return cls(datetime.date(2017, 1, 1), 0, 0)
 
     def update(self, other: "StampedHoursAccumulator") -> None:
         for when, hours_acc in other.cal.items():
@@ -69,6 +73,29 @@ class StampedHoursAccumulator(rules.Accumulator):
         for val in self.cal.values():
             result.update(val)
         return result
+
+    def period_data(self) -> List[float]:
+        t = self.period_start()
+        stop = self.period_end()
+        if t is None or stop is None:
+            return []
+        else:
+            result = []
+            NO_DATA = -1.0  # will be interpreted as missing data
+            one_day = datetime.timedelta(1)  # step for iterator
+            while t <= stop:
+                try:
+                    acc = self.cal[t]
+                except KeyError:
+                    val = NO_DATA
+                else:
+                    try:
+                        val = acc.satisfaction()
+                    except ZeroDivisionError:
+                        val = NO_DATA
+                result.append(val)
+                t = one_day + t
+            return result
 
 
 class RuntimeInfo(object):
