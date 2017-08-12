@@ -66,14 +66,37 @@ def perform_read_json(dispatcher, read_json):
         return json.load(fp)
 
 
-@attr.s
-class ReadLine:
-    prompt = attr.ib()
+class GetCurrentDate:
+    pass
+
+
+def get_current_date():
+    return Effect(GetCurrentDate())
+
+@sync_performer
+def perform_get_current_date(_dispatcher, _gcd):
+    return datetime.date.today()
 
 
 @attr.s
 class Print:
     text = attr.ib()
+
+@sync_performer
+def perform_print(dispatcher, p):
+    print(p.text)
+
+
+IO_DISPATCHER = ComposedDispatcher([
+    TypeDispatcher({ReadJSON: perform_read_json,
+                    GetCurrentDate: perform_get_current_date,
+                    HttpRequest: perform_http_request,
+    }),
+    base_dispatcher])
+
+@attr.s
+class ReadLine:
+    prompt = attr.ib()
 
 
 def get_user_name():
@@ -115,10 +138,6 @@ def age():
 @sync_performer
 def perform_readline(dispatcher, readline):
     return input(readline.prompt)
-
-@sync_performer
-def perform_print(dispatcher, p):
-    print(p.text)
 
 def main():
     eff = age()

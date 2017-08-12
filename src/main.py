@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 
 from effect.do import do
 
+import actions
 import rules
 
 
@@ -124,14 +125,14 @@ def get_runtime_info(
 def main(args_list):
     args = make_command_line_parser().parse_args(args_list)
     config_dict = yield actions.get_config_json(args.config_json)
-    now = datetime.datetime.now()
+    now = yield actions.get_current_date()
     then = datetime.timedelta(-(7 if args.week else 31)) + now
     run_info = get_runtime_info(config_dict,
                                 args.api_key_xor,
-                                then.date(),
-                                now.date(),
+                                then,
+                                now,
     )
-    redmine_info = yield get_redmine_info(
+    redmine_info = yield actions.get_redmine_info(
         run_info.base_url,
         "me", # actually API key identifies User
         run_info.start,
