@@ -1,12 +1,15 @@
 import argparse
 import datetime
 import hashlib
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
+from effect import sync_perform
 from effect.do import do
 
 import actions
+import entries
 import rules
+import sparkline
 
 
 class HoursAccumulator(rules.Accumulator):
@@ -149,7 +152,7 @@ def get_runtime_info(
     )
 
 @do
-def main(args_list):
+def do_main(args_list: Sequence[str]) -> Any:
     args = make_command_line_parser().parse_args(args_list)
     config_dict = yield actions.get_config_json(args.config_json)
     now = yield actions.get_current_date()
@@ -161,10 +164,33 @@ def main(args_list):
     )
     redmine_info = yield actions.get_redmine_info(
         run_info.base_url,
-        "me", # actually API key identifies User
+        "me", # actually the PI key identifies User
         run_info.start,
         run_info.end,
         run_info.api_key)
+    redmine_entries = [x for x in entries.parse_from(redmine_info)]
+    evaluator = rules.RuleEvaluator(
+        rules.SelectRuleUsingTheirMatchMethod(),
+        StampedHoursAccumulator)
+    satisfaction = evaluator.satisfaction(run_info.rules, redmine_entries)
+    yield actions.do_print(
+        "{}",
+        sparkline.format_data(
+            str(satisfaction.period_start()),
+            satisfaction.period_data(),
+            str(satisfaction.period_end())))
+    try:
+        global_satis = satisfaction.period_hours_accumulator().satisfaction()
+    except ZeroDivisionError:
+        yield actions.do_print("{}", "Not enough data")
+    else:
+        yield actions.do_print("Global satisfaction over this period: {:.1f}%",
+                               global_satis * 100.0)
+
+def main(args_list):
+    eff = do_main(args_list)
+    return sync_perform(actions.IO_DISPATCHER, eff)
+
 
 if __name__ == "__main__":
     main(None)
