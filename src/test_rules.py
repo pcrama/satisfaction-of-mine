@@ -98,11 +98,6 @@ class _DummyAccumulator(rules.Accumulator):
         return cls([(rule, entry)])
 
 
-class _DummySelector(rules.Selector):
-    def select(self, rules, entry):
-        return next(r for r in rules if r.match(entry))
-
-
 class TestRuleEvaluator(unittest.TestCase):
     def test_001_create_RuleEvaluator(self):
         "RuleEvaluator validates its `selector' parameter"
@@ -112,11 +107,12 @@ class TestRuleEvaluator(unittest.TestCase):
     def test_002_create_RuleEvaluator(self):
         "RuleEvaluator validates its `accumulator' parameter"
         with self.assertRaisesRegex(TypeError, "accumulator"):
-            rules.RuleEvaluator(_DummySelector(), 0)
+            rules.RuleEvaluator(rules.SelectRuleUsingTheirMatchMethod(), 0)
 
     def test_003_create_RuleEvaluator(self):
         "Create a RuleEvaluator"
-        rules.RuleEvaluator(_DummySelector(), _DummyAccumulator)
+        rules.RuleEvaluator(rules.SelectRuleUsingTheirMatchMethod(),
+                            _DummyAccumulator)
 
     def test_004_use_RuleEvaluator(self):
         rulz = [rules.MatchIssueID("65432", 0.9),
@@ -129,7 +125,8 @@ class TestRuleEvaluator(unittest.TestCase):
                  entries.TimeEntry("76543", 1.0, "Automation", "", "2017-07-29"),
                  entries.TimeEntry("65432", 1.0, "Automation", "", "2017-07-29"),
                  entries.TimeEntry("76543", 1.0, "Other", "", "2017-07-29")]
-        evaluator = rules.RuleEvaluator(_DummySelector(), _DummyAccumulator)
+        evaluator = rules.RuleEvaluator(rules.SelectRuleUsingTheirMatchMethod(),
+                                        _DummyAccumulator)
         self.assertEqual([(rulz[1], entrz[0]),
                           (rulz[2], entrz[1]),
                           (rulz[0], entrz[2]),

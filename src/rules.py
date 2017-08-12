@@ -93,6 +93,11 @@ class Convertor(metaclass=ABCMeta):
         pass
 
 
+class SelectRuleUsingTheirMatchMethod(Selector):
+    def select(self, rules, entry):
+        return next(r for r in rules if r.match(entry))
+
+
 class RuleEvaluator(object):
     AccumulatorType = TypeVar("AccumulatorType", bound=Accumulator)
     def __init__(self, selector: Selector, accumulator: Type[AccumulatorType]) -> None:
