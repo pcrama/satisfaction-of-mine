@@ -31,7 +31,8 @@ def format_data(start: str, data: Iterator[float], stop: str) -> str:
     NB: when printing this, remember that Python will try to encode this in
     the terminal's character set which (on Windows it's cp1252) maybe doesn't
     support these special characters.  Use sys.stdout.buffer.write to choose
-    your own encoding."""
+    your own encoding.  See also the C{PYTHONIOENCODING} environment variable.
+    """
     top_left = (" " * len(start), LEFT_SEPARATOR)
     bot_left = (start, LEFT_SEPARATOR)
     top_data, bot_data = zip(*list( # zip(*list of tuples) => unzip
