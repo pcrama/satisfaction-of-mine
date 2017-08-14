@@ -313,10 +313,7 @@ class TestMain(SilenceStdoutStderrMixin, unittest.TestCase):
         self.assertEqual(len(mock_io.lines_printed), 2)
         self.assertEqual(
             mock_io.lines_printed[0],
-            '          \u2595\u0020\u0020\u0020\u0020\u2581\u2583\u2588\u2588'
-            '\u2591\u2591\u2586\u2588\u2588\u2588\u258f\n'
-            '2017-06-17\u2595\u2582\u0020\u0020\u0020\u2588\u2588\u2588\u2588'
-            '\u2591\u2591\u2588\u2588\u2588\u2588\u258f2017-06-30',
+            '2017-06-17\u2595\u2581   \u2584\u2586\u2588\u2588\u2591\u2591\u2587\u2588\u2588\u2588\u258f2017-06-30',
         )
         self.assertRegex(
             mock_io.lines_printed[1],

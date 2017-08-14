@@ -26,22 +26,14 @@ def _valid(x: float) -> bool:
 def format_data(start: str, data: Iterator[float], stop: str) -> str:
     """Create a `graph' representing data in the [0.0, 1.0] range
 
-    The graph is made up by two lines of unicode characters.
+    The graph is made up by one line of unicode characters.
 
     NB: when printing this, remember that Python will try to encode this in
     the terminal's character set which (on Windows it's cp1252) maybe doesn't
     support these special characters.  Use sys.stdout.buffer.write to choose
     your own encoding.  See also the C{PYTHONIOENCODING} environment variable.
     """
-    top_left = (" " * len(start), LEFT_SEPARATOR)
-    bot_left = (start, LEFT_SEPARATOR)
-    top_data, bot_data = zip(*list( # zip(*list of tuples) => unzip
-        (HEIGTHS[max(round((x - 0.5) * 16), 0)],
-         HEIGTHS[min(round(x * 16), len(HEIGTHS) - 1)])
-        if _valid(x)
-        else (UNDEFINED, UNDEFINED)
-        for x in data))
-    top_right = (RIGHT_SEPARATOR,)
-    bot_right = (RIGHT_SEPARATOR, stop)
-    return "".join(itertools.chain(top_left, top_data, top_right, "\n",
-                                   bot_left, bot_data, bot_right))
+    left = (start, LEFT_SEPARATOR)
+    line = (HEIGTHS[round(x * 8)] if _valid(x) else UNDEFINED for x in data)
+    right = (RIGHT_SEPARATOR, stop)
+    return "".join(itertools.chain(left, line, right))

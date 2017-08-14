@@ -49,7 +49,6 @@ by Redmine.  The global satisfaction is the sum of all satisfying
 hours divided by the total number of hours logged.
 
 #+BEGIN_EXAMPLE
-            ▕  ██ ░░░    ░░     ░█░ ▄▆▁░░▂▆ █▏
   2016-07-11▕  ██▅░░░▂▄▄▅░░    ▆░█░ ███░░██▄█▏2017-08-11
   Global satisfaction over this period: 28.9%
 #+END_EXAMPLE
