@@ -132,8 +132,9 @@ class RuleEvaluator(object):
 
 def _extract_keys_and_construct(
         d: dict, ks: Sequence[str], ctor: Callable[..., Rule]) -> Optional[Rule]:
+    ignored_key_count = 1 if "_comment" in d else 0
     key_count = len(ks)
-    if key_count == len(d):
+    if key_count + ignored_key_count == len(d):
         try:
             values = [d[key] for key in ks]
         except KeyError:

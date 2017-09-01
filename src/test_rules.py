@@ -199,6 +199,21 @@ class TestParseRules(unittest.TestCase):
                           rules.parse_rules,
                           {"rules": [{"issue_id": "1", "weight": 0.0, "extra": "raises"}]})
 
+    def test_009_comment_allowed(self):
+        issue_id = "111222"
+        weight_id = 0.3
+        category = "Other"
+        weight_category = 0.6
+        weight_any = 0.9
+        self.assert_parse_rules(
+            [{"_comment": "test", "issue_id": issue_id, "weight": weight_id},
+             {"_comment": "test", "category": category, "weight": weight_category},
+             {"_comment": "test", "weight": weight_any}],
+            [rules.MatchIssueID(issue_id, weight_id),
+             rules.MatchCategory(category, weight_category),
+             rules.MatchAny(weight_any)])
+
+
 if __name__ == "__main__":
     import sys
     unittest.main(verbosity=2, exit=not hasattr(sys, "ps1"))

@@ -15,7 +15,8 @@ the time entries:
    "host": "http://redmine.example.com",
    "rules": [{"category": "Automation", "weight": 1},
              {"issue_id": "1234", "weight": 1},
-             {"weight": 0.0}]}
+             {"_comment": "Fallback: anything not matching gets this weight",
+              "weight": 0.0}]}
 #+END_EXAMPLE
 
 - =api_key= :: API key for the Redmine server.  The key is obfuscated.
@@ -26,7 +27,8 @@ the time entries:
 ** Rules
 There are three types of rules, defined by the parameters.  All rules
 have a =weight=, a float between 0 and 1.  This =weight= is used to
-count how many `satisfying' hours have been spent in total.
+count how many `satisfying' hours have been spent in total.  Each rule
+may have an optional =_comment=.
 
 It is an error if a time entry matches no rule at all, so the list
 should end with a catch-all rule.
